@@ -1,0 +1,4 @@
+name: Items
+version: '${version}'
+main: dev.fumaz.items.Items
+api-version: 1.19

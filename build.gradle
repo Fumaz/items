@@ -1,0 +1,72 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+}
+
+group = 'dev.fumaz'
+version = '1.0.2'
+
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'papermc-repo'
+        url = 'https://repo.papermc.io/repository/maven-public/'
+    }
+    maven {
+        name = 'sonatype'
+        url = 'https://oss.sonatype.org/content/groups/public/'
+    }
+}
+
+dependencies {
+    compileOnly 'io.papermc.paper:paper-api:1.19.2-R0.1-SNAPSHOT'
+}
+
+jar {
+    archiveFileName = 'items.jar'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifact("build/libs/items.jar") {
+                extension 'jar'
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name 'nexus'
+            url 'https://nexus.fumaz.dev/repository/maven-releases/'
+
+            credentials {
+                username = project.property('fumazUser')
+                password = project.property('fumazPassword')
+            }
+        }
+    }
+}
+
+def targetJavaVersion = 17
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release = targetJavaVersion
+    }
+}
+
+tasks.withType(PublishToMavenRepository) {
+    dependsOn('jar')
+}
